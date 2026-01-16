@@ -66,6 +66,7 @@ Commands:
   --test            Test R2 connection
   --install-cron    Install daily cron job
   --remove-cron     Remove cron job
+  --update          Update script to latest version
   --help            Show help message
 ```
 
@@ -86,6 +87,9 @@ pmta-log-archiver --list-remote
 
 # Test R2 connection
 pmta-log-archiver --test
+
+# Update to latest version
+sudo pmta-log-archiver --update
 ```
 
 ## Configuration

@@ -680,6 +680,44 @@ list_remote() {
     echo ""
 }
 
+update_script() {
+    local script_path=$(realpath "$0")
+    local update_url="https://raw.githubusercontent.com/cemhurturk/pmta-log-archiver/main/pmta-log-archiver.sh"
+    local tmp_file=$(mktemp)
+
+    log_info "Checking for updates..."
+
+    # Download latest version
+    if command -v curl &>/dev/null; then
+        curl -sL "$update_url" -o "$tmp_file" || {
+            rm -f "$tmp_file"
+            error_exit "Failed to download update"
+        }
+    elif command -v wget &>/dev/null; then
+        wget -q "$update_url" -O "$tmp_file" || {
+            rm -f "$tmp_file"
+            error_exit "Failed to download update"
+        }
+    else
+        error_exit "Neither curl nor wget available"
+    fi
+
+    # Verify download is a valid script
+    if ! head -1 "$tmp_file" | grep -q '^#!/bin/bash'; then
+        rm -f "$tmp_file"
+        error_exit "Downloaded file is not a valid script"
+    fi
+
+    # Replace current script
+    chmod +x "$tmp_file"
+    mv "$tmp_file" "$script_path" || {
+        rm -f "$tmp_file"
+        error_exit "Failed to update script (try running with sudo)"
+    }
+
+    log_success "Script updated successfully"
+}
+
 show_help() {
     cat << EOF
 
@@ -695,6 +733,7 @@ Commands:
   --test            Test R2 connection
   --install-cron    Install daily cron job
   --remove-cron     Remove cron job
+  --update          Update script to latest version
   --help            Show this help message
 
 Configuration: $CONFIG_FILE
@@ -704,6 +743,7 @@ Examples:
   $0 --setup        # First-time setup
   $0 --run          # Archive old logs now
   $0 --status       # Check configuration and status
+  $0 --update       # Update to latest version
 
 EOF
 }
@@ -744,6 +784,9 @@ main() {
             ;;
         --remove-cron)
             remove_cron
+            ;;
+        --update|-u)
+            update_script
             ;;
         --help|-h|*)
             show_help
