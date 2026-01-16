@@ -29,7 +29,7 @@ The script will automatically install these dependencies if missing:
 
 ```bash
 sudo curl -o /usr/local/bin/pmta-log-archiver \
-  https://raw.githubusercontent.com/cemhurturk/pmta-log-uploader/main/pmta-log-uploader.sh
+  https://raw.githubusercontent.com/cemhurturk/pmta-log-archiver/main/pmta-log-archiver.sh
 sudo chmod +x /usr/local/bin/pmta-log-archiver
 ```
 
