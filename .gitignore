@@ -1,0 +1,24 @@
+# Configuration (contains secrets)
+config
+
+# Claude Code local settings
+.claude/
+
+# Logs
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor files
+*.swp
+*.swo
+*~
+.idea/
+.vscode/
+*.sublime-*
+
+# Test files
+tests/tmp/
+tests/*.tmp
