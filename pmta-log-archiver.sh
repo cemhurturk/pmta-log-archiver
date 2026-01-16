@@ -465,7 +465,7 @@ extract_date_from_filename() {
 # Returns the rclone S3 flags for R2 connection
 # Usage: rclone <command> ":s3:${R2_BUCKET}/path" $(get_r2_flags)
 get_r2_flags() {
-    echo "--s3-provider Cloudflare --s3-access-key-id ${R2_ACCESS_KEY_ID} --s3-secret-access-key ${R2_SECRET_ACCESS_KEY} --s3-endpoint https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com"
+    echo "--s3-provider Cloudflare --s3-access-key-id ${R2_ACCESS_KEY_ID} --s3-secret-access-key ${R2_SECRET_ACCESS_KEY} --s3-endpoint https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com --s3-no-check-bucket"
 }
 
 upload_to_r2() {
