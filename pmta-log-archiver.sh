@@ -359,17 +359,14 @@ EOF
 
 test_r2_connection() {
     log_info "Testing R2 connection..."
-    
-    local endpoint="https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com"
-    local remote=":s3,provider=Cloudflare,access_key_id=${R2_ACCESS_KEY_ID},secret_access_key=${R2_SECRET_ACCESS_KEY},endpoint=${endpoint}"
-    
-    if rclone lsd "${remote}:${R2_BUCKET}" &>/dev/null; then
+
+    if rclone lsd ":s3:${R2_BUCKET}" $(get_r2_flags) &>/dev/null; then
         log_success "R2 connection successful"
         return 0
     else
         # Try to create bucket if it doesn't exist
         log_info "Bucket may not exist, attempting to verify..."
-        if rclone mkdir "${remote}:${R2_BUCKET}" 2>/dev/null; then
+        if rclone mkdir ":s3:${R2_BUCKET}" $(get_r2_flags) 2>/dev/null; then
             log_success "R2 connection successful (bucket created/verified)"
             return 0
         fi
@@ -465,9 +462,10 @@ extract_date_from_filename() {
     echo "$filename" | grep -oP '\d{4}-\d{2}-\d{2}' | head -1
 }
 
-get_r2_remote() {
-    local endpoint="https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com"
-    echo ":s3,provider=Cloudflare,access_key_id=${R2_ACCESS_KEY_ID},secret_access_key=${R2_SECRET_ACCESS_KEY},endpoint=${endpoint}"
+# Returns the rclone S3 flags for R2 connection
+# Usage: rclone <command> ":s3:${R2_BUCKET}/path" $(get_r2_flags)
+get_r2_flags() {
+    echo "--s3-provider Cloudflare --s3-access-key-id ${R2_ACCESS_KEY_ID} --s3-secret-access-key ${R2_SECRET_ACCESS_KEY} --s3-endpoint https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com"
 }
 
 upload_to_r2() {
@@ -476,11 +474,11 @@ upload_to_r2() {
     local file_date=$(extract_date_from_filename "$filename")
     local year_month=$(echo "$file_date" | cut -d'-' -f1,2)
     local dest_path="${R2_PATH}/${year_month}/${filename}"
-    local remote=$(get_r2_remote)
-    
+
     log_info "Uploading: $filename -> r2://${R2_BUCKET}/${dest_path}"
-    
-    if rclone copyto "$file_path" "${remote}:${R2_BUCKET}/${dest_path}" \
+
+    if rclone copyto "$file_path" ":s3:${R2_BUCKET}/${dest_path}" \
+        $(get_r2_flags) \
         --checksum \
         --retries 3 \
         --low-level-retries 10 \
@@ -497,18 +495,17 @@ verify_upload() {
     local file_date=$(extract_date_from_filename "$filename")
     local year_month=$(echo "$file_date" | cut -d'-' -f1,2)
     local dest_path="${R2_PATH}/${year_month}/${filename}"
-    local remote=$(get_r2_remote)
     local local_size=$(stat -c%s "$file_path")
-    
+
     local remote_info
-    remote_info=$(rclone size "${remote}:${R2_BUCKET}/${dest_path}" --json 2>/dev/null) || {
+    remote_info=$(rclone size ":s3:${R2_BUCKET}/${dest_path}" $(get_r2_flags) --json 2>/dev/null) || {
         log_error "Could not get remote file info"
         return 1
     }
-    
+
     local remote_size
     remote_size=$(echo "$remote_info" | jq -r '.bytes')
-    
+
     if [ "$local_size" -eq "$remote_size" ]; then
         log_info "Verified: sizes match (${local_size} bytes)"
         return 0
@@ -668,19 +665,18 @@ show_status() {
 
 list_remote() {
     load_config || error_exit "No configuration found"
-    
+
     echo ""
     echo "=== R2 Archived Files ==="
     echo ""
-    
-    local remote=$(get_r2_remote)
-    rclone ls "${remote}:${R2_BUCKET}/${R2_PATH}/" --human-readable 2>/dev/null || {
+
+    rclone ls ":s3:${R2_BUCKET}/${R2_PATH}/" $(get_r2_flags) --human-readable 2>/dev/null || {
         echo "No files found or connection error"
     }
-    
+
     echo ""
     echo "Total size:"
-    rclone size "${remote}:${R2_BUCKET}/${R2_PATH}/" --human-readable 2>/dev/null || true
+    rclone size ":s3:${R2_BUCKET}/${R2_PATH}/" $(get_r2_flags) --human-readable 2>/dev/null || true
     echo ""
 }
 
