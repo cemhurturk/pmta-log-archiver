@@ -569,19 +569,19 @@ run_archive() {
                 if verify_upload "$file_path"; then
                     rm -f "$file_path"
                     log_success "COMPLETED: $filename archived and removed"
-                    ((archived_count++))
+                    archived_count=$((archived_count + 1))
                     total_bytes=$((total_bytes + file_size))
                 else
                     log_error "FAILED: Verification failed for $filename"
-                    ((failed_count++))
+                    failed_count=$((failed_count + 1))
                 fi
             else
                 log_error "FAILED: Upload failed for $filename"
-                ((failed_count++))
+                failed_count=$((failed_count + 1))
             fi
         else
             log_info "KEEP: $filename (date: $file_date)"
-            ((kept_count++))
+            kept_count=$((kept_count + 1))
         fi
     done
     
